@@ -8,8 +8,15 @@ import {
   StyleSheet,
 } from 'react-native';
 
-const COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEEAD'];
-const CATEGORIES = ['Health', 'Learning', 'Mindfulness', 'Productivity', 'Other'];
+const CATEGORY_COLORS : any = {
+  Health: '#FF6B6B',
+  Learning: '#4ECDC4',
+  Mindfulness: '#45B7D1',
+  Productivity: '#96CEB4',
+  Other: '#FFEEAD'
+} as const;
+
+const CATEGORIES = Object.keys(CATEGORY_COLORS);
 
 interface HabitFormProps {
   visible: boolean;
@@ -17,7 +24,6 @@ interface HabitFormProps {
   onSubmit: (habit: {
     name: string;
     category: string;
-    color: string;
     cue: string;
     reward: string;
     frequency: string;
@@ -31,14 +37,13 @@ const HabitForm = ({ visible, onClose, onSubmit }: HabitFormProps) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [name, setName] = useState('');
   const [category, setCategory] = useState(CATEGORIES[0]);
-  const [color, setColor] = useState(COLORS[0]);
   const [cue, setCue] = useState('');
   const [reward, setReward] = useState('');
   const [frequency, setFrequency] = useState(FREQUENCIES[0]);
 
   const handleSubmit = () => {
     if (name.trim() && cue.trim() && reward.trim()) {
-      onSubmit({ name, category, color, cue, reward, frequency });
+      onSubmit({ name, category, cue, reward, frequency });
       resetForm();
     }
   };
@@ -47,7 +52,6 @@ const HabitForm = ({ visible, onClose, onSubmit }: HabitFormProps) => {
     setCurrentStep(0);
     setName('');
     setCategory(CATEGORIES[0]);
-    setColor(COLORS[0]);
     setCue('');
     setReward('');
     setFrequency(FREQUENCIES[0]);
@@ -84,7 +88,7 @@ const HabitForm = ({ visible, onClose, onSubmit }: HabitFormProps) => {
                   key={cat}
                   style={[
                     styles.categoryButton,
-                    category === cat && styles.selectedCategory
+                    category === cat && { backgroundColor: CATEGORY_COLORS[cat] }
                   ]}
                   onPress={() => setCategory(cat)}
                 >
@@ -93,21 +97,6 @@ const HabitForm = ({ visible, onClose, onSubmit }: HabitFormProps) => {
                     category === cat && styles.selectedCategoryText
                   ]}>{cat}</Text>
                 </TouchableOpacity>
-              ))}
-            </View>
-
-            <Text style={styles.label}>Color</Text>
-            <View style={styles.colorContainer}>
-              {COLORS.map(col => (
-                <TouchableOpacity
-                  key={col}
-                  style={[
-                    styles.colorButton,
-                    { backgroundColor: col },
-                    color === col && styles.selectedColor
-                  ]}
-                  onPress={() => setColor(col)}
-                />
               ))}
             </View>
           </View>
@@ -247,20 +236,6 @@ const styles = StyleSheet.create({
   },
   selectedCategoryText: {
     color: '#FFF',
-  },
-  colorContainer: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 20,
-  },
-  colorButton: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-  },
-  selectedColor: {
-    borderWidth: 3,
-    borderColor: '#000',
   },
   buttonContainer: {
     flexDirection: 'row',

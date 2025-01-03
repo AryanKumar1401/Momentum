@@ -8,11 +8,18 @@ import {
   RefreshControl,
   Animated
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import HabitForm from '../components/HabitForm';
 
 // Types for our habit data
+const CATEGORY_COLORS : any = {
+  Health: '#FF6B6B',
+  Learning: '#4ECDC4',
+  Mindfulness: '#45B7D1',
+  Productivity: '#96CEB4',
+  Other: '#FFEEAD'
+} as const;
+
 interface Habit {
   id: string;
   name: string;
@@ -94,6 +101,7 @@ const Index = () => {
       id: Date.now().toString(),
       progress: 0,
       streak: 0,
+      color: CATEGORY_COLORS[newHabit.category]
     };
     setHabits(currentHabits => [...currentHabits, habit]);
     setShowModal(false);
@@ -140,7 +148,7 @@ const Index = () => {
             <Ionicons name="gift-outline" size={16} color="#666" />
             <Text style={styles.detailText}>{habit.reward}</Text>
           </View>
-          <View style={[styles.categoryBadge, { backgroundColor: habit.color }]}>
+          <View style={[styles.categoryBadge, { backgroundColor: CATEGORY_COLORS[habit.category] }]}>
             <Text style={styles.categoryText}>{habit.category}</Text>
           </View>
         </View>

@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import HabitForm from '../components/HabitForm';
 
 // Types for our habit data
 interface Habit {
@@ -19,17 +20,52 @@ interface Habit {
   progress: number;
   streak: number;
   color: string;
+  cue: string;
+  reward: string;
+  frequency: string;
 }
 
 const mockHabits: Habit[] = [
-  { id: '1', name: 'Morning Meditation', category: 'Mindfulness', progress: 0.8, streak: 5, color: '#FF6B6B' },
-  { id: '2', name: 'Read 30 mins', category: 'Learning', progress: 0.6, streak: 3, color: '#4ECDC4' },
-  { id: '3', name: 'Exercise', category: 'Health', progress: 0.4, streak: 7, color: '#45B7D1' },
+  {
+    id: '1',
+    name: 'Morning Meditation',
+    category: 'Mindfulness',
+    progress: 0.8,
+    streak: 5,
+    color: '#FF6B6B',
+    cue: 'After waking up',
+    reward: '5min social media',
+    frequency: 'Daily'
+  },
+  {
+    id: '2',
+    name: 'Read 30 mins',
+    category: 'Learning',
+    progress: 0.6,
+    streak: 3,
+    color: '#4ECDC4',
+    cue: 'Before bed',
+    reward: 'Watch one episode',
+    frequency: 'Daily'
+  },
+  {
+    id: '3',
+    name: 'Exercise',
+    category: 'Health',
+    progress: 0.4,
+    streak: 7,
+    color: '#45B7D1',
+    cue: 'After work',
+    reward: 'Healthy snack',
+    frequency: 'Weekly'
+  },
 ];
 
 const Index = () => {
   const [habits, setHabits] = useState<Habit[]>(mockHabits);
   const [refreshing, setRefreshing] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -52,6 +88,65 @@ const Index = () => {
       )
     );
   };
+  const addHabit = (newHabit: Omit<Habit, 'id' | 'progress' | 'streak'>) => {
+    const habit: Habit = {
+      ...newHabit,
+      id: Date.now().toString(),
+      progress: 0,
+      streak: 0,
+    };
+    setHabits(currentHabits => [...currentHabits, habit]);
+    setShowModal(false);
+  };
+
+  const renderHabitCard = (habit: Habit) => (
+    <TouchableOpacity
+      key={habit.id}
+      style={styles.habitCard}
+      onPress={() => toggleHabit(habit.id)}
+      activeOpacity={0.7}
+    >
+      <View style={styles.habitHeader}>
+        <View style={styles.habitTitleRow}>
+          <Ionicons
+            name={habit.progress === 1 ? "checkmark-circle" : "checkmark-circle-outline"}
+            size={24}
+            color={habit.progress === 1 ? habit.color : "#666"}
+          />
+          <Text style={[
+            styles.habitName,
+            habit.progress === 1 && styles.completedHabitName
+          ]}>
+            {habit.name}
+          </Text>
+        </View>
+        <Text style={styles.streak}>🔥 {habit.streak} days</Text>
+      </View>
+
+      <View style={styles.habitDetails}>
+        <View style={styles.detailRow}>
+          <View style={styles.detailItem}>
+            <Ionicons name="alarm-outline" size={16} color="#666" />
+            <Text style={styles.detailText}>{habit.cue}</Text>
+          </View>
+          <View style={styles.detailItem}>
+            <Ionicons name="repeat-outline" size={16} color="#666" />
+            <Text style={styles.detailText}>{habit.frequency}</Text>
+          </View>
+        </View>
+
+        <View style={styles.detailRow}>
+          <View style={styles.detailItem}>
+            <Ionicons name="gift-outline" size={16} color="#666" />
+            <Text style={styles.detailText}>{habit.reward}</Text>
+          </View>
+          <View style={[styles.categoryBadge, { backgroundColor: habit.color }]}>
+            <Text style={styles.categoryText}>{habit.category}</Text>
+          </View>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
 
   return (
     <View style={styles.container}>
@@ -77,54 +172,29 @@ const Index = () => {
             <Text style={styles.statLabel}>Completion</Text>
           </View>
           <View style={styles.statBox}>
-            <Text style={styles.statNumber}>12</Text>
+            <Text style={styles.statNumber}>{habits.length}</Text>
             <Text style={styles.statLabel}>Total Habits</Text>
           </View>
         </View>
 
         {/* Habits List */}
         <View style={styles.habitsList}>
-          {habits.map(habit => (
-            <TouchableOpacity
-              key={habit.id}
-              style={styles.habitCard}
-              onPress={() => toggleHabit(habit.id)}
-              activeOpacity={0.7}
-            >
-              <View style={styles.habitHeader}>
-                <View style={styles.habitTitleRow}>
-                  <Ionicons
-                    name={habit.progress === 1 ? "checkmark-circle" : "checkmark-circle-outline"}
-                    size={24}
-                    color={habit.progress === 1 ? habit.color : "#666"}
-                  />
-                  <Text style={[
-                    styles.habitName,
-                    habit.progress === 1 && styles.completedHabitName
-                  ]}>
-                    {habit.name}
-                  </Text>
-                </View>
-                <Text style={styles.streak}>🔥 {habit.streak} days</Text>
-              </View>
-              <View style={styles.progressContainer}>
-                <LinearGradient
-                  colors={[habit.color, habit.color + '80']}
-                  style={[styles.progressBar, { width: `${habit.progress * 100}%` }]}
-                />
-              </View>
-              <Text style={styles.category}>{habit.category}</Text>
-            </TouchableOpacity>
-          ))}
+          {habits.map(habit => renderHabitCard(habit))}
         </View>
       </ScrollView>
 
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.addButton}
-        onPress={() => {/* Add habit navigation logic */ }}
+        onPress={() => setShowModal(true)}
       >
         <Ionicons name="add" size={30} color="#FFF" />
       </TouchableOpacity>
+
+      <HabitForm
+        visible={showModal}
+        onClose={() => setShowModal(false)}
+        onSubmit={addHabit}
+      />
     </View>
   );
 };
@@ -241,7 +311,39 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
-  }
+  },
+  habitDetails: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
+  },
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  detailItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  detailText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  categoryBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    opacity: 0.8,
+  },
+  categoryText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: '600',
+  },
 });
 
 export default Index;

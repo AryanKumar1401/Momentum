@@ -459,8 +459,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: 100,
     height: '90%',
-    borderTopRightRadius: 12,
-    borderBottomRightRadius: 12,
+    borderRadius: 12,
   },
 });
 

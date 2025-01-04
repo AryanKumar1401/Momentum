@@ -8,7 +8,9 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Alert
+  Alert,
+  TouchableWithoutFeedback,
+  Keyboard
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
@@ -61,62 +63,62 @@ export default function ReflectionScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
-      <View style={styles.header}>
-        <Text style={styles.title}>Daily Reflection</Text>
-        <TouchableOpacity
-          onPress={() => setShowHistory(true)}
-          style={styles.historyButton}
-        >
-          <Ionicons name="time-outline" size={24} color="#007AFF" />
-        </TouchableOpacity>
-      </View>
-
-      <ScrollView style={styles.content}>
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>What went well today?</Text>
-          <TextInput
-            style={styles.input}
-            multiline
-            value={successes}
-            onChangeText={setSuccesses}
-            placeholder="List your wins and accomplishments..."
-          />
+        <View style={styles.header}>
+          <Text style={styles.title}>Daily Reflection</Text>
+          <TouchableOpacity
+            onPress={() => setShowHistory(true)}
+            style={styles.historyButton}
+          >
+            <Ionicons name="time-outline" size={24} color="#007AFF" />
+          </TouchableOpacity>
         </View>
 
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>What could be improved?</Text>
-          <TextInput
-            style={styles.input}
-            multiline
-            value={improvements}
-            onChangeText={setImprovements}
-            placeholder="Areas for growth and improvement..."
-          />
-        </View>
+        <ScrollView style={styles.content}>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>What went well today?</Text>
+            <TextInput
+              style={styles.input}
+              multiline
+              value={successes}
+              onChangeText={setSuccesses}
+              placeholder="List your wins and accomplishments..."
+            />
+          </View>
 
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Journal</Text>
-          <TextInput
-            style={[styles.input, styles.journalInput]}
-            multiline
-            value={journal}
-            onChangeText={setJournal}
-            placeholder="Additional thoughts and reflections..."
-          />
-        </View>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>What could be improved?</Text>
+            <TextInput
+              style={styles.input}
+              multiline
+              value={improvements}
+              onChangeText={setImprovements}
+              placeholder="Areas for growth and improvement..."
+            />
+          </View>
 
-        <TouchableOpacity
-          style={styles.saveButton}
-          onPress={handleSave}
-        >
-          <Text style={styles.saveButtonText}>Save Reflection</Text>
-        </TouchableOpacity>
-      </ScrollView>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Journal</Text>
+            <TextInput
+              style={[styles.input, styles.journalInput]}
+              multiline
+              value={journal}
+              onChangeText={setJournal}
+              placeholder="Additional thoughts and reflections..."
+            />
+          </View>
 
-      <ReflectionHistory
-        visible={showHistory}
-        onClose={() => setShowHistory(false)}
-      />
+          <TouchableOpacity
+            style={styles.saveButton}
+            onPress={handleSave}
+          >
+            <Text style={styles.saveButtonText}>Save Reflection</Text>
+          </TouchableOpacity>
+        </ScrollView>
+
+        <ReflectionHistory
+          visible={showHistory}
+          onClose={() => setShowHistory(false)}
+        />
     </KeyboardAvoidingView>
   );
 }

@@ -23,7 +23,7 @@ export default function TabLayout() {
             }} />
             <Tabs.Screen name="reflection" options={{
                 title: 'Reflection', tabBarIcon: ({ color, focused }) => <Ionicons name={
-                    focused ? 'information-circle' : 'information-circle-outline'} color={color} size={24} />,
+                    focused ? 'bulb-sharp' : 'bulb-outline'} color={color} size={24} />,
             }} />
         </Tabs>
     )

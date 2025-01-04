@@ -24,7 +24,6 @@ export default function ReflectionScreen() {
 
   const handleSave = async () => {
     console.log('Saving reflection:', { successes, improvements, journal });
-    // TODO: Implement actual saving functionality
     if (!successes.trim() || !improvements.trim() || !journal.trim()) {
       Alert.alert('Please fill out all fields');
       return;

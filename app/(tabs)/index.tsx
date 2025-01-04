@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,9 +10,10 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import HabitForm from '../components/HabitForm';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Types for our habit data
-const CATEGORY_COLORS : any = {
+const CATEGORY_COLORS: any = {
   Health: '#FF6B6B',
   Learning: '#4ECDC4',
   Mindfulness: '#45B7D1',
@@ -73,9 +74,31 @@ const Index = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
+  useEffect(() => {
+    loadHabits();
+  }, []);
 
-  const onRefresh = useCallback(() => {
+  const loadHabits = async () => {
+    try {
+      const storedHabits = await AsyncStorage.getItem('habits');
+      if (storedHabits) {
+        setHabits(JSON.parse(storedHabits));
+      }
+    } catch (error) {
+      console.error('Error loading habits:', error);
+    }
+  }
+
+  const saveHabits = async (updatedHabits: Habit[]) => {
+    try {
+      await AsyncStorage.setItem('habits', JSON.stringify(updatedHabits));
+    } catch (error) {
+      console.error('Error saving habits:', error);
+    }
+  };
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
+    await loadHabits();
     // Simulate data refresh
     setTimeout(() => {
       setRefreshing(false);
@@ -83,8 +106,8 @@ const Index = () => {
   }, []);
 
   const toggleHabit = (habitId: string) => {
-    setHabits(currentHabits =>
-      currentHabits.map(habit =>
+    setHabits(currentHabits => {
+      const updatedHabits = currentHabits.map(habit =>
         habit.id === habitId
           ? {
             ...habit,
@@ -92,9 +115,13 @@ const Index = () => {
             streak: habit.progress === 1 ? habit.streak - 1 : habit.streak + 1
           }
           : habit
-      )
-    );
+      );
+      saveHabits(updatedHabits);
+      return updatedHabits;
+    });
   };
+
+
   const addHabit = (newHabit: Omit<Habit, 'id' | 'progress' | 'streak'>) => {
     const habit: Habit = {
       ...newHabit,
@@ -103,8 +130,20 @@ const Index = () => {
       streak: 0,
       color: CATEGORY_COLORS[newHabit.category]
     };
-    setHabits(currentHabits => [...currentHabits, habit]);
+    setHabits(currentHabits => {
+      const updatedHabits = [...currentHabits, habit];
+      saveHabits(updatedHabits);
+      return updatedHabits;
+    });
     setShowModal(false);
+  };
+
+  const deleteHabit = async (habitId: string) => {
+    setHabits(currentHabits => {
+      const updatedHabits = currentHabits.filter(habit => habit.id !== habitId);
+      saveHabits(updatedHabits);
+      return updatedHabits;
+    });
   };
 
   const renderHabitCard = (habit: Habit) => (

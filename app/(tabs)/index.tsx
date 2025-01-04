@@ -6,11 +6,15 @@ import {
   StyleSheet,
   TouchableOpacity,
   RefreshControl,
-  Animated
+  Animated,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import HabitForm from '../components/HabitForm';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Swipeable from 'react-native-gesture-handler/Swipeable';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import Notification from '../components/Notification';
 
 // Types for our habit data
 const CATEGORY_COLORS: any = {
@@ -73,6 +77,11 @@ const Index = () => {
   const [habits, setHabits] = useState<Habit[]>(mockHabits);
   const [refreshing, setRefreshing] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [notification, setNotification] = useState<{
+    visible: boolean;
+    message: string;
+    type?: 'success' | 'error';
+  }>({ visible: false, message: '' });
 
   useEffect(() => {
     loadHabits();
@@ -122,7 +131,7 @@ const Index = () => {
   };
 
 
-  const addHabit = (newHabit: Omit<Habit, 'id' | 'progress' | 'streak'>) => {
+  const addHabit = (newHabit: { name: string; category: string; cue: string; reward: string; frequency: string; }) => {
     const habit: Habit = {
       ...newHabit,
       id: Date.now().toString(),
@@ -146,103 +155,156 @@ const Index = () => {
     });
   };
 
+  const handleDelete = (habitId: string, name: string) => {
+    Alert.alert(
+      "Delete Habit?",
+      `Are you sure you want to delete "${name}"? This action cannot be undone.`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            deleteHabit(habitId);
+            setNotification({
+              visible: true,
+              message: `${name} deleted`,
+              type: 'success'
+            });
+          }
+        }
+      ]
+    );
+  };
+
+  const renderRightActions = (habitId: string, name: string) => {
+    return (
+      <TouchableOpacity
+        style={styles.deleteAction}
+        onPress={() => handleDelete(habitId, name)}
+      >
+        <Ionicons name="trash-outline" size={24} color="#FFF" />
+      </TouchableOpacity>
+    );
+  };
+
   const renderHabitCard = (habit: Habit) => (
-    <TouchableOpacity
+    <Swipeable
       key={habit.id}
-      style={styles.habitCard}
-      onPress={() => toggleHabit(habit.id)}
-      activeOpacity={0.7}
+      renderRightActions={() => renderRightActions(habit.id, habit.name)}
+      rightThreshold={40}
     >
-      <View style={styles.habitHeader}>
-        <View style={styles.habitTitleRow}>
-          <Ionicons
-            name={habit.progress === 1 ? "checkmark-circle" : "checkmark-circle-outline"}
-            size={24}
-            color={habit.progress === 1 ? habit.color : "#666"}
-          />
-          <Text style={[
-            styles.habitName,
-            habit.progress === 1 && styles.completedHabitName
-          ]}>
-            {habit.name}
-          </Text>
-        </View>
-        <Text style={styles.streak}>🔥 {habit.streak} days</Text>
-      </View>
+      <Animated.View>
+        <TouchableOpacity
+          style={styles.habitCard}
+          onPress={() => toggleHabit(habit.id)}
+          activeOpacity={0.7}
+        >
+          <View style={styles.habitHeader}>
+            <View style={styles.habitTitleRow}>
+              <Ionicons
+                name={habit.progress === 1 ? "checkmark-circle" : "checkmark-circle-outline"}
+                size={24}
+                color={habit.progress === 1 ? habit.color : "#666"}
+              />
+              <Text style={[
+                styles.habitName,
+                habit.progress === 1 && styles.completedHabitName
+              ]}>
+                {habit.name}
+              </Text>
+            </View>
+            <Text style={styles.streak}>🔥 {habit.streak} days</Text>
+          </View>
 
-      <View style={styles.habitDetails}>
-        <View style={styles.detailRow}>
-          <View style={styles.detailItem}>
-            <Ionicons name="alarm-outline" size={16} color="#666" />
-            <Text style={styles.detailText}>{habit.cue}</Text>
-          </View>
-          <View style={styles.detailItem}>
-            <Ionicons name="repeat-outline" size={16} color="#666" />
-            <Text style={styles.detailText}>{habit.frequency}</Text>
-          </View>
-        </View>
+          <View style={styles.habitDetails}>
+            <View style={styles.detailRow}>
+              <View style={styles.detailItem}>
+                <Ionicons name="alarm-outline" size={16} color="#666" />
+                <Text style={styles.detailText}>{habit.cue}</Text>
+              </View>
+              <View style={styles.detailItem}>
+                <Ionicons name="repeat-outline" size={16} color="#666" />
+                <Text style={styles.detailText}>{habit.frequency}</Text>
+              </View>
+            </View>
 
-        <View style={styles.detailRow}>
-          <View style={styles.detailItem}>
-            <Ionicons name="gift-outline" size={16} color="#666" />
-            <Text style={styles.detailText}>{habit.reward}</Text>
+            <View style={styles.detailRow}>
+              <View style={styles.detailItem}>
+                <Ionicons name="gift-outline" size={16} color="#666" />
+                <Text style={styles.detailText}>{habit.reward}</Text>
+              </View>
+              <View style={[styles.categoryBadge, { backgroundColor: CATEGORY_COLORS[habit.category] }]}>
+                <Text style={styles.categoryText}>{habit.category}</Text>
+              </View>
+            </View>
           </View>
-          <View style={[styles.categoryBadge, { backgroundColor: CATEGORY_COLORS[habit.category] }]}>
-            <Text style={styles.categoryText}>{habit.category}</Text>
-          </View>
-        </View>
-      </View>
-    </TouchableOpacity>
+        </TouchableOpacity>
+      </Animated.View>
+    </Swipeable>
   );
 
   return (
-    <View style={styles.container}>
-      <ScrollView
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.title}>Today's Habits</Text>
-          <Text style={styles.date}>{new Date().toLocaleDateString()}</Text>
-        </View>
-
-        {/* Stats Summary */}
-        <View style={styles.statsContainer}>
-          <View style={styles.statBox}>
-            <Text style={styles.statNumber}>7</Text>
-            <Text style={styles.statLabel}>Day Streak</Text>
+ 
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <View style={styles.container}>
+        {notification.visible && (
+          <Notification
+            message={notification.message}
+            type={notification.type}
+            onHide={() => setNotification(prev => ({ ...prev, visible: false }))}
+          />
+        )}
+        <ScrollView
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.title}>Today's Habits</Text>
+            <Text style={styles.date}>{new Date().toLocaleDateString()}</Text>
           </View>
-          <View style={styles.statBox}>
-            <Text style={styles.statNumber}>85%</Text>
-            <Text style={styles.statLabel}>Completion</Text>
+
+          {/* Stats Summary */}
+          <View style={styles.statsContainer}>
+            <View style={styles.statBox}>
+              <Text style={styles.statNumber}>7</Text>
+              <Text style={styles.statLabel}>Day Streak</Text>
+            </View>
+            <View style={styles.statBox}>
+              <Text style={styles.statNumber}>85%</Text>
+              <Text style={styles.statLabel}>Completion</Text>
+            </View>
+            <View style={styles.statBox}>
+              <Text style={styles.statNumber}>{habits.length}</Text>
+              <Text style={styles.statLabel}>Total Habits</Text>
+            </View>
           </View>
-          <View style={styles.statBox}>
-            <Text style={styles.statNumber}>{habits.length}</Text>
-            <Text style={styles.statLabel}>Total Habits</Text>
+
+          {/* Habits List */}
+          <View style={styles.habitsList}>
+            {habits.map(habit => renderHabitCard(habit))}
           </View>
-        </View>
+        </ScrollView>
 
-        {/* Habits List */}
-        <View style={styles.habitsList}>
-          {habits.map(habit => renderHabitCard(habit))}
-        </View>
-      </ScrollView>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => setShowModal(true)}
+        >
+          <Ionicons name="add" size={30} color="#FFF" />
+        </TouchableOpacity>
 
-      <TouchableOpacity
-        style={styles.addButton}
-        onPress={() => setShowModal(true)}
-      >
-        <Ionicons name="add" size={30} color="#FFF" />
-      </TouchableOpacity>
-
-      <HabitForm
-        visible={showModal}
-        onClose={() => setShowModal(false)}
-        onSubmit={addHabit}
-      />
-    </View>
+        <HabitForm
+          visible={showModal}
+          onClose={() => setShowModal(false)}
+          onSubmit={addHabit}
+        />
+      </View>
+    </GestureHandlerRootView>
   );
 };
 
@@ -390,6 +452,15 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 12,
     fontWeight: '600',
+  },
+  deleteAction: {
+    backgroundColor: '#FF3B30',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 100,
+    height: '90%',
+    borderTopRightRadius: 12,
+    borderBottomRightRadius: 12,
   },
 });
 

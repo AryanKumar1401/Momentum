@@ -8,15 +8,15 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Alert,
-  TouchableWithoutFeedback,
-  Keyboard
+  Alert
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import ReflectionHistory from '../components/ReflectionHistory';
 import { Reflection } from '../types/reflection';
+import { api } from '../services/api';
+import { getAuth } from 'firebase/auth';
 
+const auth = getAuth();
 
 export default function ReflectionScreen() {
   const [successes, setSuccesses] = useState('');
@@ -32,20 +32,16 @@ export default function ReflectionScreen() {
     }
 
     try {
-      const newReflection: Reflection = {
-        id: Date.now().toString(),
+      // Replace with actual user ID from your auth system
+      const userId = auth.currentUser?.uid;
+      if (!userId) return;
+      
+      await api.saveReflection(userId, {
         date: new Date().toISOString(),
-        successes,
-        improvements,
-        journal
-      };
-
-      const stored = await AsyncStorage.getItem('reflections');
-      const reflections = stored ? JSON.parse(stored) : [];
-      await AsyncStorage.setItem(
-        'reflections',
-        JSON.stringify([newReflection, ...reflections])
-      );
+        success: successes,
+        improvement: improvements,
+        journal: journal
+      });
 
       setSuccesses('');
       setImprovements('');

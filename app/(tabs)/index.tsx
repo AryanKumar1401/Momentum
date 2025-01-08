@@ -15,6 +15,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Notification from '../components/Notification';
+import { useAuth } from '../../contexts/AuthContext';
+import { useRouter } from 'expo-router';
 
 // Types for our habit data
 const CATEGORY_COLORS: any = {
@@ -74,6 +76,8 @@ const mockHabits: Habit[] = [
 ];
 
 const Index = () => {
+  const { user, logOut } = useAuth();
+  const router = useRouter();
   const [habits, setHabits] = useState<Habit[]>(mockHabits);
   const [refreshing, setRefreshing] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -247,8 +251,15 @@ const Index = () => {
     </Swipeable>
   );
 
+  const handleLogout = async () => {
+    try {
+      await logOut();
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
+
   return (
- 
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View style={styles.container}>
         {notification.visible && (
@@ -266,6 +277,12 @@ const Index = () => {
           {/* Header */}
           <View style={styles.header}>
             <Text style={styles.title}>Today's Habits</Text>
+            <View style={styles.headerRight}>
+              <Text style={styles.email}>{user?.email}</Text>
+              <TouchableOpacity onPress={handleLogout}>
+                <Ionicons name="log-out-outline" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
             <Text style={styles.date}>{new Date().toLocaleDateString()}</Text>
           </View>
 
@@ -460,6 +477,15 @@ const styles = StyleSheet.create({
     width: 100,
     height: '90%',
     borderRadius: 12,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  email: {
+    fontSize: 14,
+    color: '#666',
   },
 });
 

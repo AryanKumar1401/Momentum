@@ -34,7 +34,7 @@ app.post('/api/reflections', async (req, res) => {
             improvement,
             journal,
         });
-        res.status(201).send('Reflection added successfully!');
+        res.status(201).json({ message: 'Reflection added successfully!' });
     } catch (error) {
         res.status(400).send(error.message);
     }

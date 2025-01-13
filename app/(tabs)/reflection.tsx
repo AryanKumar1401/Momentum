@@ -15,6 +15,7 @@ import ReflectionHistory from '../components/ReflectionHistory';
 import { Reflection } from '../types/reflection';
 import { api } from '../services/api';
 import { getAuth } from 'firebase/auth';
+import Notification from '../components/Notification';
 
 const auth = getAuth();
 
@@ -23,6 +24,7 @@ export default function ReflectionScreen() {
   const [improvements, setImprovements] = useState('');
   const [journal, setJournal] = useState('');
   const [showHistory, setShowHistory] = useState(false);
+  const [showNotification, setShowNotification] = useState(false);
 
   const handleSave = async () => {
     console.log('Saving reflection:', { successes, improvements, journal });
@@ -35,7 +37,7 @@ export default function ReflectionScreen() {
       // Replace with actual user ID from your auth system
       const userId = auth.currentUser?.uid;
       if (!userId) return;
-      
+
       await api.saveReflection(userId, {
         date: new Date().toISOString(),
         success: successes,
@@ -46,7 +48,8 @@ export default function ReflectionScreen() {
       setSuccesses('');
       setImprovements('');
       setJournal('');
-      Alert.alert('Success', 'Reflection saved successfully!');
+      setShowNotification(true);
+      Alert.alert('Success', 'Reflection saved successfully');
 
     } catch (error) {
       console.error('Error saving reflection:', error);
@@ -59,62 +62,70 @@ export default function ReflectionScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
-        <View style={styles.header}>
-          <Text style={styles.title}>Daily Reflection</Text>
-          <TouchableOpacity
-            onPress={() => setShowHistory(true)}
-            style={styles.historyButton}
-          >
-            <Ionicons name="time-outline" size={24} color="#007AFF" />
-          </TouchableOpacity>
+      <View style={styles.header}>
+        <Text style={styles.title}>Daily Reflection</Text>
+        <TouchableOpacity
+          onPress={() => setShowHistory(true)}
+          style={styles.historyButton}
+        >
+          <Ionicons name="time-outline" size={24} color="#007AFF" />
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView style={styles.content}>
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>What went well today?</Text>
+          <TextInput
+            style={styles.input}
+            multiline
+            value={successes}
+            onChangeText={setSuccesses}
+            placeholder="List your wins and accomplishments..."
+          />
         </View>
 
-        <ScrollView style={styles.content}>
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>What went well today?</Text>
-            <TextInput
-              style={styles.input}
-              multiline
-              value={successes}
-              onChangeText={setSuccesses}
-              placeholder="List your wins and accomplishments..."
-            />
-          </View>
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>What could be improved?</Text>
+          <TextInput
+            style={styles.input}
+            multiline
+            value={improvements}
+            onChangeText={setImprovements}
+            placeholder="Areas for growth and improvement..."
+          />
+        </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>What could be improved?</Text>
-            <TextInput
-              style={styles.input}
-              multiline
-              value={improvements}
-              onChangeText={setImprovements}
-              placeholder="Areas for growth and improvement..."
-            />
-          </View>
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Journal</Text>
+          <TextInput
+            style={[styles.input, styles.journalInput]}
+            multiline
+            value={journal}
+            onChangeText={setJournal}
+            placeholder="Additional thoughts and reflections..."
+          />
+        </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Journal</Text>
-            <TextInput
-              style={[styles.input, styles.journalInput]}
-              multiline
-              value={journal}
-              onChangeText={setJournal}
-              placeholder="Additional thoughts and reflections..."
-            />
-          </View>
+        <TouchableOpacity
+          style={styles.saveButton}
+          onPress={handleSave}
+        >
+          <Text style={styles.saveButtonText}>Save Reflection</Text>
+        </TouchableOpacity>
+        {showNotification && (
+          <Notification
+            message="Reflection saved successfully!"
+            type="success"
+            onHide={() => setShowNotification(false)}
+          />
+        )}
+      </ScrollView>
 
-          <TouchableOpacity
-            style={styles.saveButton}
-            onPress={handleSave}
-          >
-            <Text style={styles.saveButtonText}>Save Reflection</Text>
-          </TouchableOpacity>
-        </ScrollView>
+      <ReflectionHistory
+        visible={showHistory}
+        onClose={() => setShowHistory(false)}
+      />
 
-        <ReflectionHistory
-          visible={showHistory}
-          onClose={() => setShowHistory(false)}
-        />
     </KeyboardAvoidingView>
   );
 }

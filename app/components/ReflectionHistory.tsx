@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Modal, View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { api } from '../services/api';
 import { getAuth } from 'firebase/auth';
+import { Timestamp } from 'firebase/firestore';
 
 const auth = getAuth();
 
@@ -10,8 +11,24 @@ interface ReflectionHistoryProps {
   onClose: () => void;
 }
 
+interface Reflection {
+  id: string;
+  date: {
+    _seconds: number;
+    _nanoseconds: number;
+  };
+  success: string;
+  improvement: string;
+  journal: string;
+}
+
+const formatDate = (timestamp: Timestamp) => {
+  if (!timestamp) return '';
+  return timestamp.toDate().toLocaleDateString();
+};
+
 export default function ReflectionHistory({ visible, onClose }: ReflectionHistoryProps) {
-  const [reflections, setReflections] = useState([]);
+  const [reflections, setReflections] = useState<Reflection[]>([]);
 
   useEffect(() => {
     if (visible) {
@@ -25,6 +42,7 @@ export default function ReflectionHistory({ visible, onClose }: ReflectionHistor
       const userId = auth.currentUser?.uid;
       if (!userId) return;
       const data = await api.getReflections(userId);
+      console.log('Reflections in loadReflections:', data);
       setReflections(data);
     } catch (error) {
       console.error('Error loading reflections:', error);
@@ -45,7 +63,7 @@ export default function ReflectionHistory({ visible, onClose }: ReflectionHistor
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <View style={styles.reflectionItem}>
-              <Text style={styles.date}>{new Date(item.date.seconds * 1000).toLocaleDateString()}</Text>
+              <Text style={styles.date}>{new Date(item.date._seconds * 1000).toLocaleDateString()}</Text>
               <Text style={styles.label}>Successes:</Text>
               <Text style={styles.text}>{item.success}</Text>
               <Text style={styles.label}>Improvements:</Text>

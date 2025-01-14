@@ -140,13 +140,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
+    paddingTop: Platform.OS === 'ios' ? 60 : 24, // Add more top padding, especially for iOS
     backgroundColor: '#FFF',
     borderBottomWidth: 1,
     borderBottomColor: '#E5E5E5',
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 28,
+    fontWeight: '700',
+    marginTop: 0, // Remove marginTop since we're handling spacing in header
   },
   historyButton: {
     padding: 8,

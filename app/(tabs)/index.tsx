@@ -81,6 +81,7 @@ const Index = () => {
   const [habits, setHabits] = useState<Habit[]>(mockHabits);
   const [refreshing, setRefreshing] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
   const [notification, setNotification] = useState<{
     visible: boolean;
     message: string;
@@ -88,8 +89,12 @@ const Index = () => {
   }>({ visible: false, message: '' });
 
   useEffect(() => {
+    if (!user) {
+      router.push('/(auth)/login');
+      return;
+    }
     loadHabits();
-  }, []);
+  }, [user]);
 
   const loadHabits = async () => {
     try {
@@ -134,6 +139,13 @@ const Index = () => {
     });
   };
 
+  const editHabit = (habitId: string) => {
+    const habitToEdit = habits.find(h => h.id === habitId);
+    if (habitToEdit) {
+      setEditingHabit(habitToEdit);
+      setShowModal(true);
+    }
+  };
 
   const addHabit = (newHabit: { name: string; category: string; cue: string; reward: string; frequency: string; }) => {
     const habit: Habit = {
@@ -148,6 +160,30 @@ const Index = () => {
       saveHabits(updatedHabits);
       return updatedHabits;
     });
+    setShowModal(false);
+  };
+
+  const handleSubmit = (habitData: { name: string; category: string; cue: string; reward: string; frequency: string; }) => {
+    if (editingHabit) {
+      // Update existing habit
+      setHabits(currentHabits => {
+        const updatedHabits = currentHabits.map(habit =>
+          habit.id === editingHabit.id
+            ? {
+                ...habit,
+                ...habitData,
+                color: CATEGORY_COLORS[habitData.category]
+              }
+            : habit
+        );
+        saveHabits(updatedHabits);
+        return updatedHabits;
+      });
+      setEditingHabit(null);
+    } else {
+      // Add new habit
+      addHabit(habitData);
+    }
     setShowModal(false);
   };
 
@@ -204,16 +240,17 @@ const Index = () => {
       <Animated.View>
         <TouchableOpacity
           style={styles.habitCard}
-          onPress={() => toggleHabit(habit.id)}
+          onPress={() => editHabit(habit.id)}
           activeOpacity={0.7}
         >
           <View style={styles.habitHeader}>
             <View style={styles.habitTitleRow}>
-              <Ionicons
-                name={habit.progress === 1 ? "checkmark-circle" : "checkmark-circle-outline"}
-                size={24}
-                color={habit.progress === 1 ? habit.color : "#666"}
-              />
+              <TouchableOpacity onPress={() => toggleHabit(habit.id)} activeOpacity={0.7}>
+                <Ionicons
+                  name={habit.progress === 1 ? "checkmark-circle" : "checkmark-circle-outline"}
+                  size={24}
+                  color={habit.progress === 1 ? habit.color : "#666"}
+                /></TouchableOpacity>
               <Text style={[
                 styles.habitName,
                 habit.progress === 1 && styles.completedHabitName
@@ -317,8 +354,12 @@ const Index = () => {
 
         <HabitForm
           visible={showModal}
-          onClose={() => setShowModal(false)}
-          onSubmit={addHabit}
+          onClose={() => {
+            setShowModal(false);
+            setEditingHabit(null);
+          }}
+          onSubmit={handleSubmit}
+          initialValues={editingHabit || undefined}
         />
       </View>
     </GestureHandlerRootView>

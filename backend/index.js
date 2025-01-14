@@ -40,6 +40,22 @@ app.post('/api/reflections', async (req, res) => {
     }
 });
 
+app.post('/api/habits', async (req, res) => {
+    const { userId, date, success, improvement, journal } = req.body;
+    try {
+        await db.collection('habits').add({
+            userId,
+            date: admin.firestore.Timestamp.fromDate(new Date(date)),
+            success,
+            improvement,
+            journal,
+        });
+        res.status(201).json({ message: 'Reflection added successfully!' });
+    } catch (error) {
+        res.status(400).send(error.message);
+    }
+});
+
 // Get Reflections by User ID
 app.get('/api/reflections/:userId', async (req, res) => {
     const { userId } = req.params;

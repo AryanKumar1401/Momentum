@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Modal,
   View,
@@ -28,18 +28,42 @@ interface HabitFormProps {
     reward: string;
     frequency: string;
   }) => void;
+  initialValues?: {
+    name: string;
+    category: string;
+    cue: string;
+    reward: string;
+    frequency: string;
+  };
 }
 
 const STEPS = ['Cue', 'Action', 'Reward', 'Frequency'];
 const FREQUENCIES = ['Daily', 'Weekly', 'Custom'];
 
-const HabitForm = ({ visible, onClose, onSubmit }: HabitFormProps) => {
+const HabitForm: React.FC<HabitFormProps> = ({ visible, onClose, onSubmit, initialValues }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [name, setName] = useState('');
-  const [category, setCategory] = useState(CATEGORIES[0]);
+  const [category, setCategory] = useState('Other');
   const [cue, setCue] = useState('');
   const [reward, setReward] = useState('');
-  const [frequency, setFrequency] = useState(FREQUENCIES[0]);
+  const [frequency, setFrequency] = useState('Daily');
+
+  useEffect(() => {
+    if (initialValues) {
+      setName(initialValues.name);
+      setCategory(initialValues.category);
+      setCue(initialValues.cue);
+      setReward(initialValues.reward);
+      setFrequency(initialValues.frequency);
+    } else {
+      // Reset form when not editing
+      setName('');
+      setCategory('Other');
+      setCue('');
+      setReward('');
+      setFrequency('Daily');
+    }
+  }, [initialValues, visible]);
 
   const handleSubmit = () => {
     if (name.trim() && cue.trim() && reward.trim()) {
